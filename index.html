@@ -1,62 +1,140 @@
-<!DOCTYPE html><html lang="th">
+<!DOCTYPE html>
+<html lang="th">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Adventure Realm</title><style>
+
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Adventure Realm 3D 2.0</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+-webkit-tap-highlight-color:transparent;
+}
+
 body{
 margin:0;
-background:#183b28;
-color:white;
+overflow:hidden;
+background:#87ceeb;
 font-family:sans-serif;
-text-align:center;
+touch-action:none;
 }
 
-h1{margin:12px}
+#ui{
+position:fixed;
+top:8px;
+left:50%;
+transform:translateX(-50%);
+width:95%;
+max-width:600px;
+text-align:center;
+color:white;
+z-index:10;
+text-shadow:2px 2px 4px #000;
+pointer-events:none;
+}
+
+#title{
+font-size:25px;
+font-weight:bold;
+}
 
 #info{
-font-size:18px;
-margin:8px;
+margin-top:5px;
+padding:8px;
+background:rgba(0,0,0,.6);
+border-radius:12px;
+font-size:16px;
 }
 
-#game{
-height:60vh;
-position:relative;
+#bar{
+margin-top:5px;
+background:#222;
+border-radius:10px;
 overflow:hidden;
-background:#4b9b55;
-border:4px solid #222;
+height:16px;
 }
 
-#player{
-position:absolute;
-font-size:45px;
-left:50%;
-top:50%;
-transform:translate(-50%,-50%);
-z-index:5;
+#hpbar{
+height:100%;
+width:100%;
+background:#e63946;
 }
 
-.coin,.enemy,.heart{
-position:absolute;
-font-size:30px;
-}
-
-.enemy{
-font-size:38px;
+#expbar{
+height:100%;
+width:0%;
+background:#ffd60a;
 }
 
 #message{
-font-size:22px;
+font-size:17px;
+margin-top:5px;
 font-weight:bold;
-margin:10px;
 }
 
-button{
-font-size:22px;
-padding:12px 18px;
-margin:4px;
-border-radius:15px;
-border:none;
-cursor:pointer;
+#controls{
+position:fixed;
+bottom:15px;
+left:10px;
+z-index:20;
+display:grid;
+grid-template-columns:55px 55px 55px;
+grid-template-rows:55px 55px;
+gap:5px;
+}
+
+.btn{
+width:55px;
+height:55px;
+border:0;
+border-radius:14px;
+font-size:24px;
+background:rgba(0,0,0,.65);
+color:white;
+box-shadow:0 3px 7px #000;
+}
+
+#up{
+grid-column:2;
+}
+
+#left{
+grid-column:1;
+grid-row:2;
+}
+
+#down{
+grid-column:2;
+grid-row:2;
+}
+
+#right{
+grid-column:3;
+grid-row:2;
+}
+
+#actions{
+position:fixed;
+bottom:20px;
+right:10px;
+z-index:20;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.action{
+border:0;
+border-radius:14px;
+padding:13px 15px;
+font-size:17px;
+font-weight:bold;
+box-shadow:0 3px 7px #000;
 }
 
 #attack{
@@ -68,344 +146,769 @@ color:white;
 background:#fcbf49;
 }
 
-</style></head><body><h1>🏰 Adventure Realm</h1><div id="info">
-❤️ พลังชีวิต: <span id="hp">3</span>
-&nbsp;&nbsp;
-🪙 เหรียญ: <span id="score">0</span>
-</div><div id="message">
-เก็บเหรียญและกำจัดมอนสเตอร์ให้ได้!
-</div><div id="game"><div id="player">🧙</div><!-- เหรียญ --><div class="coin" style="left:15%;top:20%">🪙</div>
-<div class="coin" style="left:70%;top:20%">🪙</div>
-<div class="coin" style="left:40%;top:65%">🪙</div>
-<div class="coin" style="left:80%;top:70%">🪙</div>
-<div class="coin" style="left:25%;top:80%">🪙</div><!-- มอนสเตอร์ --><div class="enemy" style="left:30%;top:30%">👾</div>
-<div class="enemy" style="left:65%;top:55%">👹</div>
-<div class="enemy" style="left:85%;top:35%">🐉</div><!-- หัวใจ --><div class="heart" style="left:50%;top:20%">❤️</div></div><!-- ปุ่มเดิน --><div>
-<button onclick="move(0,-30)">⬆️</button><br><button onclick="move(-30,0)">⬅️</button>
-
-<button onclick="move(0,30)">⬇️</button>
-
-<button onclick="move(30,0)">➡️</button>
-
-</div><br><!-- ปุ่มโจมตี --><button id="attack" onclick="attack()">⚔️ โจมตี</button>
-
-<button id="restart" onclick="restartGame()">🔄 เริ่มเกมใหม่</button>
-
-<script>
-
-let x=50;
-let y=50;
-let score=0;
-let hp=3;
-let gameOver=false;
-
-const player=document.getElementById("player");
-const game=document.getElementById("game");
-
-
-// เดิน
-function move(dx,dy){
-
-if(gameOver)return;
-
-x+=dx/10;
-y+=dy/10;
-
-x=Math.max(5,Math.min(95,x));
-y=Math.max(5,Math.min(90,y));
-
-player.style.left=x+"%";
-player.style.top=y+"%";
-
-checkCoin();
-checkHeart();
-checkEnemy();
-
-}
-
-
-// เก็บเหรียญ
-function checkCoin(){
-
-document.querySelectorAll(".coin").forEach(c=>{
-
-if(c.style.display==="none")return;
-
-let a=parseFloat(c.style.left);
-let b=parseFloat(c.style.top);
-
-if(Math.abs(x-a)<8 && Math.abs(y-b)<8){
-
-c.style.display="none";
-
-score++;
-
-document.getElementById("score").textContent=score;
-
-document.getElementById("message").textContent=
-"🪙 เก็บเหรียญได้แล้ว!";
-
-checkWin();
-
-}
-
-});
-
-}
-
-
-// เก็บหัวใจ
-function checkHeart(){
-
-let heart=document.querySelector(".heart");
-
-if(heart.style.display==="none")return;
-
-let a=parseFloat(heart.style.left);
-let b=parseFloat(heart.style.top);
-
-if(Math.abs(x-a)<8 && Math.abs(y-b)<8){
-
-heart.style.display="none";
-
-if(hp<3){
-hp++;
-document.getElementById("hp").textContent=hp;
-}
-
-document.getElementById("message").textContent=
-"❤️ ได้รับพลังชีวิตเพิ่ม!";
-
-}
-
-}
-
-
-// ตรวจสอบชนมอนสเตอร์
-function checkEnemy(){
-
-document.querySelectorAll(".enemy").forEach(e=>{
-
-if(e.style.display==="none")return;
-
-let a=parseFloat(e.style.left);
-let b=parseFloat(e.style.top);
-
-if(Math.abs(x-a)<7 && Math.abs(y-b)<7){
-
-hp--;
-
-document.getElementById("hp").textContent=hp;
-
-document.getElementById("message").textContent=
-"💥 โดนมอนสเตอร์โจมตี!";
-
-x=50;
-y=50;
-
-player.style.left=x+"%";
-player.style.top=y+"%";
-
-if(hp<=0){
-
-gameOver=true;
-
-document.getElementById("message").textContent=
-"💀 GAME OVER! กดเริ่มเกมใหม่";
-
-}
-
-}
-
-});
-
-}
-
-
-// โจมตีมอนสเตอร์
-function attack(){
-
-if(gameOver)return;
-
-let hit=false;
-
-document.querySelectorAll(".enemy").forEach(e=>{
-
-if(e.style.display==="none")return;
-
-let a=parseFloat(e.style.left);
-let b=parseFloat(e.style.top);
-
-if(Math.abs(x-a)<15 && Math.abs(y-b)<15){
-
-e.style.display="none";
-
-score+=2;
-
-document.getElementById("score").textContent=score;
-
-document.getElementById("message").textContent=
-"⚔️ กำจัดมอนสเตอร์สำเร็จ! +2 เหรียญ";
-
-hit=true;
-
-}
-
-});
-
-if(!hit){
-
-document.getElementById("message").textContent=
-"⚔️ ฟันไม่โดนมอนสเตอร์!";
-
-}
-
-checkWin();
-
-}
-
-
-// ชนะ
-function checkWin(){
-
-let enemies=[...document.querySelectorAll(".enemy")];
-
-let coins=[...document.querySelectorAll(".coin")];
-
-let allEnemiesDead=enemies.every(e=>e.style.display==="none");
-
-let allCoinsCollected=coins.every(c=>c.style.display==="none");
-
-if(allEnemiesDead && allCoinsCollected){
-
-gameOver=true;
-
-document.getElementById("message").textContent=
-"🏆 ยินดีด้วย! คุณพิชิต Adventure Realm สำเร็จ!";
-
-}
-
-}
-
-
-// เริ่มเกมใหม่
-function restartGame(){
-
-location.reload();
-
-}
-
-</script></body>
-</html>
-.coin,.enemy,.heart{
-position:absolute;
-font-size:30px;
-}
-
-.enemy{
-font-size:38px;
-}
-
-#message{
-font-size:22px;
-font-weight:bold;
-margin:10px;
-}
-
-button{
-font-size:22px;
-padding:12px 18px;
-margin:4px;
-border-radius:15px;
-border:none;
-cursor:pointer;
-}
-
-#attack{
-background:#d62828;
+#screen{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.8);
+z-index:50;
+align-items:center;
+justify-content:center;
+text-align:center;
 color:white;
 }
 
-#restart{
-background:#fcbf49;
+#box{
+background:#183b28;
+padding:25px;
+border-radius:20px;
+width:90%;
+max-width:400px;
+border:3px solid #ffd60a;
 }
 
-</style></head><body><h1>🏰 Adventure Realm</h1><div id="info">
-❤️ พลังชีวิต: <span id="hp">3</span>
-&nbsp;&nbsp;
-🪙 เหรียญ: <span id="score">0</span>
-</div><div id="message">
-เก็บเหรียญและกำจัดมอนสเตอร์ให้ได้!
-</div><div id="game"><div id="player">🧙</div><!-- เหรียญ --><div class="coin" style="left:15%;top:20%">🪙</div>
-<div class="coin" style="left:70%;top:20%">🪙</div>
-<div class="coin" style="left:40%;top:65%">🪙</div>
-<div class="coin" style="left:80%;top:70%">🪙</div>
-<div class="coin" style="left:25%;top:80%">🪙</div><!-- มอนสเตอร์ --><div class="enemy" style="left:30%;top:30%">👾</div>
-<div class="enemy" style="left:65%;top:55%">👹</div>
-<div class="enemy" style="left:85%;top:35%">🐉</div><!-- หัวใจ --><div class="heart" style="left:50%;top:20%">❤️</div></div><!-- ปุ่มเดิน --><div>
-<button onclick="move(0,-30)">⬆️</button><br><button onclick="move(-30,0)">⬅️</button>
+#box h1{
+font-size:30px;
+}
 
-<button onclick="move(0,30)">⬇️</button>
+</style>
 
-<button onclick="move(30,0)">➡️</button>
+</head>
 
-</div><br><!-- ปุ่มโจมตี --><button id="attack" onclick="attack()">⚔️ โจมตี</button>
+<body>
 
-<button id="restart" onclick="restartGame()">🔄 เริ่มเกมใหม่</button>
+<div id="ui">
+
+<div id="title">
+🏰 Adventure Realm 3D
+</div>
+
+<div id="info">
+
+❤️ HP:
+<span id="hp">100</span>
+
+&nbsp;|&nbsp;
+
+⭐ Level:
+<span id="level">1</span>
+
+&nbsp;|&nbsp;
+
+🪙 Score:
+<span id="score">0</span>
+
+<br>
+
+👾 ศัตรู:
+<span id="enemyCount">5</span>
+
+&nbsp;|&nbsp;
+
+🏆 High Score:
+<span id="high">0</span>
+
+</div>
+
+<div id="bar">
+<div id="hpbar"></div>
+</div>
+
+<div id="bar">
+<div id="expbar"></div>
+</div>
+
+<div id="message">
+⚔️ กำจัดมอนสเตอร์และเก็บเหรียญ!
+</div>
+
+</div>
+
+
+<div id="controls">
+
+<button class="btn"
+id="up"
+onclick="move(0,-1)">
+⬆️
+</button>
+
+<button class="btn"
+id="left"
+onclick="move(-1,0)">
+⬅️
+</button>
+
+<button class="btn"
+id="down"
+onclick="move(0,1)">
+⬇️
+</button>
+
+<button class="btn"
+id="right"
+onclick="move(1,0)">
+➡️
+</button>
+
+</div>
+
+
+<div id="actions">
+
+<button class="action"
+id="attack"
+onclick="attack()">
+⚔️ โจมตี
+</button>
+
+<button class="action"
+id="restart"
+onclick="restartGame()">
+🔄 เริ่มใหม่
+</button>
+
+</div>
+
+
+<div id="screen">
+
+<div id="box">
+
+<h1 id="endTitle">
+🏆 ชนะแล้ว!
+</h1>
+
+<p id="endText">
+คุณพิชิต Adventure Realm สำเร็จ!
+</p>
+
+<button class="action"
+onclick="restartGame()">
+🔄 เล่นอีกครั้ง
+</button>
+
+</div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
 
 <script>
 
-let x=50;
-let y=50;
+/* =========================
+   GAME SETUP
+========================= */
+
+let scene=
+new THREE.Scene();
+
+scene.background=
+new THREE.Color(0x87ceeb);
+
+scene.fog=
+new THREE.Fog(
+0x87ceeb,
+20,
+60
+);
+
+
+let camera=
+new THREE.PerspectiveCamera(
+60,
+innerWidth/innerHeight,
+0.1,
+100
+);
+
+
+let renderer=
+new THREE.WebGLRenderer({
+antialias:true
+});
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+renderer.setPixelRatio(
+Math.min(
+devicePixelRatio,
+2
+)
+);
+
+renderer.shadowMap.enabled=true;
+
+document.body.appendChild(
+renderer.domElement
+);
+
+
+/* =========================
+   LIGHT
+========================= */
+
+scene.add(
+new THREE.HemisphereLight(
+0xffffff,
+0x444444,
+1.5
+)
+);
+
+
+let sun=
+new THREE.DirectionalLight(
+0xffffff,
+1
+);
+
+sun.position.set(
+10,
+20,
+10
+);
+
+sun.castShadow=true;
+
+scene.add(sun);
+
+
+/* =========================
+   GROUND
+========================= */
+
+let ground=
+new THREE.Mesh(
+new THREE.PlaneGeometry(
+60,
+60
+),
+new THREE.MeshStandardMaterial({
+color:0x4b9b55
+})
+);
+
+ground.rotation.x=
+-Math.PI/2;
+
+ground.receiveShadow=true;
+
+scene.add(ground);
+
+
+/* =========================
+   PLAYER
+========================= */
+
+let player=
+new THREE.Group();
+
+
+let body=
+new THREE.Mesh(
+new THREE.CapsuleGeometry(
+0.45,
+0.8,
+4,
+8
+),
+new THREE.MeshStandardMaterial({
+color:0x2463c5
+})
+);
+
+body.position.y=1;
+
+body.castShadow=true;
+
+player.add(body);
+
+
+let head=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+0.4,
+16,
+16
+),
+new THREE.MeshStandardMaterial({
+color:0xffcc99
+})
+);
+
+head.position.y=2;
+
+head.castShadow=true;
+
+player.add(head);
+
+
+let hat=
+new THREE.Mesh(
+new THREE.ConeGeometry(
+0.55,
+0.9,
+12
+),
+new THREE.MeshStandardMaterial({
+color:0x6a1b9a
+})
+);
+
+hat.position.y=2.6;
+
+hat.castShadow=true;
+
+player.add(hat);
+
+
+let sword=
+new THREE.Mesh(
+new THREE.BoxGeometry(
+0.12,
+1.5,
+0.12
+),
+new THREE.MeshStandardMaterial({
+color:0xffffff,
+metalness:0.8
+})
+);
+
+sword.position.set(
+0.7,
+1.1,
+0
+);
+
+sword.rotation.z=
+-Math.PI/4;
+
+player.add(sword);
+
+
+scene.add(player);
+
+
+/* =========================
+   GAME DATA
+========================= */
+
+let hp=100;
+
+let maxHp=100;
+
+let level=1;
+
+let exp=0;
+
 let score=0;
-let hp=3;
+
 let gameOver=false;
 
-const player=document.getElementById("player");
-const game=document.getElementById("game");
+let enemies=[];
+
+let coins=[];
 
 
-// เดิน
-function move(dx,dy){
+/* =========================
+   HIGH SCORE
+========================= */
 
-if(gameOver)return;
+let highScore=
+localStorage.getItem(
+"adventureHighScore"
+)||0;
 
-x+=dx/10;
-y+=dy/10;
+document.getElementById(
+"high"
+).textContent=
+highScore;
 
-x=Math.max(5,Math.min(95,x));
-y=Math.max(5,Math.min(90,y));
 
-player.style.left=x+"%";
-player.style.top=y+"%";
+/* =========================
+   TREES
+========================= */
 
-checkCoin();
-checkHeart();
-checkEnemy();
+for(
+let i=0;
+i<30;
+i++
+){
+
+let tree=
+new THREE.Group();
+
+
+let trunk=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.3,
+0.4,
+2,
+8
+),
+new THREE.MeshStandardMaterial({
+color:0x6b3e26
+})
+);
+
+trunk.position.y=1;
+
+tree.add(trunk);
+
+
+let leaves=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+1.3,
+10,
+10
+),
+new THREE.MeshStandardMaterial({
+color:0x176b32
+})
+);
+
+leaves.position.y=2.5;
+
+tree.add(leaves);
+
+
+tree.position.set(
+Math.random()*50-25,
+0,
+Math.random()*50-25
+);
+
+
+scene.add(tree);
 
 }
 
 
-// เก็บเหรียญ
-function checkCoin(){
+/* =========================
+   COINS
+========================= */
 
-document.querySelectorAll(".coin").forEach(c=>{
+for(
+let i=0;
+i<10;
+i++
+){
 
-if(c.style.display==="none")return;
+let coin=
+new THREE.Mesh(
+new THREE.CylinderGeometry(
+0.45,
+0.45,
+0.15,
+20
+),
+new THREE.MeshStandardMaterial({
+color:0xffd700,
+metalness:0.8
+})
+);
 
-let a=parseFloat(c.style.left);
-let b=parseFloat(c.style.top);
+coin.rotation.z=
+Math.PI/2;
 
-if(Math.abs(x-a)<8 && Math.abs(y-b)<8){
+coin.position.set(
+Math.random()*30-15,
+0.6,
+Math.random()*30-15
+);
 
-c.style.display="none";
+coin.userData.collected=false;
 
-score++;
+scene.add(coin);
 
-document.getElementById("score").textContent=score;
+coins.push(coin);
 
-document.getElementById("message").textContent=
-"🪙 เก็บเหรียญได้แล้ว!";
+}
+
+
+/* =========================
+   ENEMIES
+========================= */
+
+function createEnemy(
+x,
+z,
+boss=false
+){
+
+let enemy=
+new THREE.Group();
+
+
+let body=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+boss?1.3:0.7,
+16,
+16
+),
+new THREE.MeshStandardMaterial({
+color:
+boss
+?0x8b0000
+:0x7b1fa2
+})
+);
+
+body.position.y=
+boss?1.3:0.7;
+
+body.castShadow=true;
+
+enemy.add(body);
+
+
+let eye=
+new THREE.Mesh(
+new THREE.SphereGeometry(
+0.12,
+8,
+8
+),
+new THREE.MeshStandardMaterial({
+color:0xffffff
+})
+);
+
+eye.position.set(
+-0.25,
+boss?1.6:1,
+0.6
+);
+
+enemy.add(eye);
+
+
+let eye2=
+eye.clone();
+
+eye2.position.x=
+0.25;
+
+enemy.add(eye2);
+
+
+enemy.position.set(
+x,
+0,
+z
+);
+
+
+enemy.userData.hp=
+boss?5:1;
+
+enemy.userData.boss=
+boss;
+
+enemy.userData.alive=true;
+
+
+scene.add(enemy);
+
+enemies.push(enemy);
+
+}
+
+
+/* สร้างศัตรู */
+
+for(
+let i=0;
+i<5;
+i++
+){
+
+createEnemy(
+Math.random()*20-10,
+Math.random()*20-10
+);
+
+}
+
+
+/* สร้างบอส */
+
+createEnemy(
+0,
+-18,
+true
+);
+
+
+/* =========================
+   UPDATE UI
+========================= */
+
+function updateUI(){
+
+document.getElementById(
+"hp"
+).textContent=
+Math.max(
+0,
+Math.floor(hp)
+);
+
+document.getElementById(
+"level"
+).textContent=
+level;
+
+document.getElementById(
+"score"
+).textContent=
+score;
+
+document.getElementById(
+"hpbar"
+).style.width=
+(hp/maxHp*100)+"%";
+
+document.getElementById(
+"expbar"
+).style.width=
+(exp/100*100)+"%";
+
+
+let alive=
+enemies.filter(
+e=>e.userData.alive
+).length;
+
+document.getElementById(
+"enemyCount"
+).textContent=
+alive;
+
+}
+
+
+/* =========================
+   MOVE
+========================= */
+
+function move(dx,dz){
+
+if(gameOver)return;
+
+
+player.position.x+=
+dx*1.2;
+
+player.position.z+=
+dz*1.2;
+
+
+player.position.x=
+Math.max(
+-27,
+Math.min(
+27,
+player.position.x
+)
+);
+
+
+player.position.z=
+Math.max(
+-27,
+Math.min(
+27,
+player.position.z
+)
+);
+
+
+if(dx!==0)
+player.rotation.y=
+dx>0
+?Math.PI/2
+:-Math.PI/2;
+
+
+if(dz!==0)
+player.rotation.y=
+dz>0
+?Math.PI
+:0;
+
+
+checkCoins();
+
+updateCamera();
+
+}
+
+
+/* =========================
+   COINS
+========================= */
+
+function checkCoins(){
+
+coins.forEach(
+coin=>{
+
+if(
+coin.userData.collected
+)return;
+
+
+if(
+player.position.distanceTo(
+coin.position
+)<1.5
+){
+
+coin.userData.collected=
+true;
+
+coin.visible=false;
+
+score+=1;
+
+exp+=20;
+
+
+if(exp>=100){
+
+exp=0;
+
+level++;
+
+maxHp+=20;
+
+hp=maxHp;
+
+message(
+"⭐ LEVEL UP! Level "+
+level
+);
+
+}else{
+
+message(
+"🪙 เก็บเหรียญ +1"
+);
+
+}
+
+updateUI();
 
 checkWin();
 
@@ -416,66 +919,84 @@ checkWin();
 }
 
 
-// เก็บหัวใจ
-function checkHeart(){
+/* =========================
+   ENEMY AI
+========================= */
 
-let heart=document.querySelector(".heart");
+function enemyAI(){
 
-if(heart.style.display==="none")return;
+if(gameOver)return;
 
-let a=parseFloat(heart.style.left);
-let b=parseFloat(heart.style.top);
 
-if(Math.abs(x-a)<8 && Math.abs(y-b)<8){
+enemies.forEach(
+enemy=>{
 
-heart.style.display="none";
+if(
+!enemy.userData.alive
+)return;
 
-if(hp<3){
-hp++;
-document.getElementById("hp").textContent=hp;
+
+let distance=
+enemy.position.distanceTo(
+player.position
+);
+
+
+if(
+distance<10
+){
+
+let direction=
+new THREE.Vector3();
+
+direction.subVectors(
+player.position,
+enemy.position
+);
+
+direction.normalize();
+
+
+enemy.position.x+=
+direction.x*
+0.025;
+
+enemy.position.z+=
+direction.z*
+0.025;
+
+
+enemy.lookAt(
+player.position
+);
+
 }
 
-document.getElementById("message").textContent=
-"❤️ ได้รับพลังชีวิตเพิ่ม!";
 
-}
+if(
+distance<1.5
+){
 
-}
+hp-=
+enemy.userData.boss
+?0.5
+:0.2;
 
-
-// ตรวจสอบชนมอนสเตอร์
-function checkEnemy(){
-
-document.querySelectorAll(".enemy").forEach(e=>{
-
-if(e.style.display==="none")return;
-
-let a=parseFloat(e.style.left);
-let b=parseFloat(e.style.top);
-
-if(Math.abs(x-a)<7 && Math.abs(y-b)<7){
-
-hp--;
-
-document.getElementById("hp").textContent=hp;
-
-document.getElementById("message").textContent=
-"💥 โดนมอนสเตอร์โจมตี!";
-
-x=50;
-y=50;
-
-player.style.left=x+"%";
-player.style.top=y+"%";
 
 if(hp<=0){
 
+hp=0;
+
 gameOver=true;
 
-document.getElementById("message").textContent=
-"💀 GAME OVER! กดเริ่มเกมใหม่";
+endGame(
+"💀 GAME OVER",
+"คุณถูกมอนสเตอร์กำจัด!"
+);
 
 }
+
+updateUI();
 
 }
 
@@ -484,78 +1005,336 @@ document.getElementById("message").textContent=
 }
 
 
-// โจมตีมอนสเตอร์
+/* =========================
+   ATTACK
+========================= */
+
 function attack(){
 
 if(gameOver)return;
 
+
 let hit=false;
 
-document.querySelectorAll(".enemy").forEach(e=>{
 
-if(e.style.display==="none")return;
+enemies.forEach(
+enemy=>{
 
-let a=parseFloat(e.style.left);
-let b=parseFloat(e.style.top);
+if(
+!enemy.userData.alive
+)return;
 
-if(Math.abs(x-a)<15 && Math.abs(y-b)<15){
 
-e.style.display="none";
+let distance=
+player.position.distanceTo(
+enemy.position
+);
 
-score+=2;
 
-document.getElementById("score").textContent=score;
+if(
+distance<3
+){
 
-document.getElementById("message").textContent=
-"⚔️ กำจัดมอนสเตอร์สำเร็จ! +2 เหรียญ";
+enemy.userData.hp--;
 
 hit=true;
+
+
+if(
+enemy.userData.hp<=0
+){
+
+enemy.userData.alive=
+false;
+
+enemy.visible=false;
+
+score+=
+enemy.userData.boss
+?10
+:2;
+
+exp+=
+enemy.userData.boss
+?100
+:20;
+
+
+if(
+exp>=100
+){
+
+exp=0;
+
+level++;
+
+maxHp+=20;
+
+hp=maxHp;
+
+}
+
+
+message(
+enemy.userData.boss
+?"👹 BOSS ถูกกำจัด!"
+:"⚔️ กำจัดมอนสเตอร์!"
+);
+
+}
 
 }
 
 });
 
+
 if(!hit){
 
-document.getElementById("message").textContent=
-"⚔️ ฟันไม่โดนมอนสเตอร์!";
+message(
+"⚔️ โจมตีไม่โดน!"
+);
 
 }
+
+
+updateUI();
 
 checkWin();
 
 }
 
 
-// ชนะ
+/* =========================
+   WIN
+========================= */
+
 function checkWin(){
 
-let enemies=[...document.querySelectorAll(".enemy")];
+let alive=
+enemies.some(
+e=>e.userData.alive
+);
 
-let coins=[...document.querySelectorAll(".coin")];
 
-let allEnemiesDead=enemies.every(e=>e.style.display==="none");
+let leftCoins=
+coins.some(
+c=>!c.userData.collected
+);
 
-let allCoinsCollected=coins.every(c=>c.style.display==="none");
 
-if(allEnemiesDead && allCoinsCollected){
+if(
+!alive &&
+!leftCoins
+){
 
 gameOver=true;
 
-document.getElementById("message").textContent=
-"🏆 ยินดีด้วย! คุณพิชิต Adventure Realm สำเร็จ!";
+endGame(
+"🏆 ชนะแล้ว!",
+"คุณพิชิต Adventure Realm 3D สำเร็จ!"
+);
 
 }
 
 }
 
 
-// เริ่มเกมใหม่
+/* =========================
+   END GAME
+========================= */
+
+function endGame(
+title,
+text
+){
+
+if(score>highScore){
+
+highScore=score;
+
+localStorage.setItem(
+"adventureHighScore",
+highScore
+);
+
+}
+
+
+document.getElementById(
+"endTitle"
+).textContent=
+title;
+
+document.getElementById(
+"endText"
+).textContent=
+text+
+" คะแนน: "+
+score;
+
+
+document.getElementById(
+"screen"
+).style.display=
+"flex";
+
+}
+
+
+/* =========================
+   MESSAGE
+========================= */
+
+function message(text){
+
+document.getElementById(
+"message"
+).textContent=
+text;
+
+}
+
+
+/* =========================
+   CAMERA
+========================= */
+
+function updateCamera(){
+
+camera.position.set(
+player.position.x,
+12,
+player.position.z+15
+);
+
+camera.lookAt(
+player.position.x,
+0,
+player.position.z
+);
+
+}
+
+
+/* =========================
+   ANIMATION
+========================= */
+
+function animate(){
+
+requestAnimationFrame(
+animate
+);
+
+
+coins.forEach(
+coin=>{
+
+if(
+!coin.userData.collected
+){
+
+coin.rotation.y+=
+0.05;
+
+}
+
+});
+
+
+enemies.forEach(
+(enemy,i)=>{
+
+if(
+enemy.userData.alive
+){
+
+enemy.position.y=
+Math.sin(
+Date.now()*
+0.003+i
+)*0.1;
+
+}
+
+});
+
+
+enemyAI();
+
+updateCamera();
+
+renderer.render(
+scene,
+camera
+);
+
+}
+
+
+animate();
+
+updateUI();
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener(
+"keydown",
+e=>{
+
+if(e.key==="ArrowUp")
+move(0,-1);
+
+if(e.key==="ArrowDown")
+move(0,1);
+
+if(e.key==="ArrowLeft")
+move(-1,0);
+
+if(e.key==="ArrowRight")
+move(1,0);
+
+if(e.code==="Space")
+attack();
+
+});
+
+
+/* =========================
+   RESIZE
+========================= */
+
+window.addEventListener(
+"resize",
+()=>{
+
+camera.aspect=
+innerWidth/innerHeight;
+
+camera.updateProjectionMatrix();
+
+renderer.setSize(
+innerWidth,
+innerHeight
+);
+
+});
+
+
+/* =========================
+   RESTART
+========================= */
+
 function restartGame(){
 
 location.reload();
 
 }
 
-</script></body>
+</script>
+
+</body>
   </html>
